@@ -20,10 +20,11 @@ class Doctor extends Person {
     }
     setAppointment(patient, examination) {
         if (this.patients.indexOf(patient) != -1) {
+            patient.appointments.push(examination);
             console.log(`${this.date} ${examination.type} appointment for the patient ${patient.firstName} ${patient.lastName} is set`);
         }
         else {
-            console.log(`Patient ${patient.firstName} ${patient.lastName} is not one of your patients.`);
+            console.log(`${this.date} Patient ${patient.firstName} ${patient.lastName} is not one of your patients.`);
         }
     }
 }
@@ -33,6 +34,7 @@ class Patient extends Person {
         this.birthId = birthId;
         this.registerNumber = registerNumber;
         this.doctor = null;
+        this.appointments = [];
     }
     setPatient() {
         console.log(`${this.date} Patient ${this.firstName} ${this.lastName} is created.`);
@@ -40,67 +42,93 @@ class Patient extends Person {
     chooseDoctor(doctor) {
         if (!this.doctor) {
             this.doctor = doctor;
+            doctor.patients.push(this);
             console.log(`${this.date} Patient ${this.firstName} ${this.lastName} chose doctor ${doctor.firstName} ${doctor.lastName}`);
         }
         else {
-            console.log('You have already chosen a doctor.');
+            console.log(`${this.date} Patient ${this.firstName} has already chosen a doctor.`);
         }
     }
     getExaminaton(examination, data) {
-        console.log(examination.exam(data));
-        //console.log('Examination is finished.')
+        if (this.appointments.indexOf(examination) != -1) {
+            console.log(`${this.date} Patient ${this.firstName}:`, examination.examine(data));
+            this.appointments.splice(this.appointments.indexOf(examination), 1);
+        }
+        else {
+            console.log(`${this.date} ${this.firstName} doesn't have an appointment for ${examination.type} examination.`);
+        }
     }
 }
 class MedicalExamination {
     constructor(type) {
         this.type = type;
+        this.date = new Date();
     }
 }
 class BloodPressureExamination extends MedicalExamination {
     constructor(type) {
         super(type);
     }
-    exam(data) {
+    examine(data) {
         this.topValue = data['topValue'];
         this.bottomValue = data['bottomValue'];
         this.pulse = data['pulse'];
-        return 'Blood pressure examination is being maintained.';
+        return `Blood pressure examination is being maintained.
+            Top value: ${this.topValue}
+            Bottom value: ${this.bottomValue}
+            Pulse: ${this.pulse}`;
     }
 }
 class BloodSugarLevelExamination extends MedicalExamination {
     constructor(type) {
         super(type);
     }
-    exam(data) {
+    examine(data) {
         this.value = data['value'];
         this.lastMealTime = data['lastMealTime'];
-        return 'Blood sugar level examination is being maintained.';
+        return `Blood sugar level examination is being maintained.
+            Value: ${this.value}
+            Time of last meal: ${this.lastMealTime}`;
     }
 }
 class BloodCholesteroleLevel extends MedicalExamination {
     constructor(type) {
         super(type);
     }
-    exam(data) {
+    examine(data) {
         this.value = data['value'];
         this.lastMealTime = data['lastMealTime'];
-        return 'Bllod cholesterole level is being maintained.';
+        return `Blood cholesterole level examination is being maintained.
+            Value: ${this.value}
+            Time of last meal: ${this.lastMealTime}`;
     }
 }
 let doctor1 = new Doctor('Milan', 'Milanovic', 'cardiologist');
 let doctor2 = new Doctor('Petar', 'Petrovic', 'neurospecialist');
 let patient1 = new Patient('Dragan', 'Dragic', 123456789, 123);
-let exam1 = new BloodSugarLevelExamination('Blood sugar level');
-let exam2 = new BloodPressureExamination('Blood pressure');
-let exam3 = new BloodCholesteroleLevel('Blood cholesterole');
+let patient2 = new Patient('Marko', 'Markovic', 123456789, 123);
+let bloodSugarExamination = new BloodSugarLevelExamination('Blood sugar level');
+let bloodPressureExamination = new BloodPressureExamination('Blood pressure');
+let bloodCholesteroleExamination = new BloodCholesteroleLevel('Blood cholesterole');
 doctor1.setDoctor();
 patient1.setPatient();
 patient1.chooseDoctor(doctor1);
 patient1.chooseDoctor(doctor2);
-doctor1.addPatient(patient1);
-doctor1.setAppointment(patient1, exam1);
-doctor1.setAppointment(patient1, exam2);
-patient1.getExaminaton(exam1, {
+patient2.chooseDoctor(doctor1);
+//console.log(doctor1.patients)
+doctor1.setAppointment(patient1, bloodSugarExamination);
+//doctor1.setAppointment(patient2, bloodSugarExamination);
+doctor1.setAppointment(patient1, bloodPressureExamination);
+//console.log(patient1.appointments)
+patient1.getExaminaton(bloodSugarExamination, {
     value: 55, lastMealTime: '11h'
 });
-console.log(doctor1.patients);
+patient2.getExaminaton(bloodSugarExamination, {
+    value: 59, lastMealTime: '12h'
+});
+patient1.getExaminaton(bloodPressureExamination, {
+    topValue: 100, bottomValue: 50, pulse: 120
+});
+patient1.getExaminaton(bloodSugarExamination, {
+    value: 60, lastMealTime: '12h'
+});
